@@ -1,0 +1,36 @@
+name: Chequear precio
+
+on:
+  schedule:
+    - cron: "0 12 * * *"  # una vez al día, 12:00 UTC = 09:00hs Argentina
+  workflow_dispatch:  # permite ejecutarlo manualmente desde la pestaña Actions
+
+permissions:
+  contents: write  # necesario para poder commitear price_state.json
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clonar el repo
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      - name: Ejecutar chequeo de precio
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python check_price.py
+
+      - name: Guardar el estado en el repo
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: actualiza estado del chequeo de precio"
+          file_pattern: price_state.json
