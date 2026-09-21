@@ -1,7 +1,12 @@
 """
 Chequea el precio de varios productos en tiendadelinternas.ar (Tiendanube)
-y avisa por Telegram si alguno bajó respecto de la última vez que se
-controló.
+y avisa por Telegram si alguno bajó respecto del último precio registrado.
+
+Además del precio actual, guarda un historial con fecha por producto en
+price_state.json (para poder calcular variaciones y alimentar el
+dashboard más adelante). Si encuentra el formato anterior del archivo
+(solo "price" + "last_checked", sin historial), lo migra solo la
+primera vez que corre.
 
 Los pedidos se hacen de a uno, en orden (nunca en simultáneo), reusando
 la misma conexión (requests.Session) y con una pausa entre cada uno, para
@@ -13,7 +18,7 @@ import os
 import random
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 import requests
@@ -33,6 +38,10 @@ NAME_META_PROPERTY = "og:title"
 # Pausa (en segundos) entre pedido y pedido, con algo de variación para
 # no ser un intervalo perfectamente regular.
 DELAY_RANGE_SECONDS = (2, 5)
+
+# Cuántos días de historial conservar por producto, para que el JSON no
+# crezca sin límite.
+MAX_HISTORY_DAYS = 90
 # ─────────────────────────────────────────────────────────────────────────
 
 STATE_FILE = Path(__file__).parent / "price_state.json"
@@ -83,6 +92,51 @@ def save_state(state: dict) -> None:
     )
 
 
+def record_price(state: dict, url: str, name: str, price: float, today: date = None):
+    """
+    Agrega el precio de hoy al historial del producto (una entrada por día)
+    y devuelve el precio previo, o None si es la primera vez que se ve
+    este producto.
+
+    Si el producto viene del formato anterior (solo "price" +
+    "last_checked", sin "history"), lo migra a un historial de una
+    entrada antes de seguir.
+    """
+    today = today or date.today()
+    today_str = today.isoformat()
+
+    product = state.setdefault(url, {})
+    if "history" not in product:
+        history = []
+        if "price" in product:
+            last_checked = product.get("last_checked")
+            entry_date = (
+                datetime.fromisoformat(last_checked).date().isoformat()
+                if last_checked
+                else today_str
+            )
+            history = [{"date": entry_date, "price": product["price"]}]
+        product = {"name": name, "history": history}
+        state[url] = product
+
+    product["name"] = name  # por si cambió el nombre en la tienda
+    history = product["history"]
+
+    previous_price = history[-1]["price"] if history else None
+
+    if history and history[-1]["date"] == today_str:
+        # Corrida repetida el mismo día: actualiza en vez de duplicar
+        history[-1]["price"] = price
+    else:
+        history.append({"date": today_str, "price": price})
+
+    cutoff = (today - timedelta(days=MAX_HISTORY_DAYS)).isoformat()
+    product["history"] = [h for h in history if h["date"] >= cutoff]
+    product["last_checked"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+    return previous_price
+
+
 def notify_telegram(message: str) -> None:
     if not TELEGRAM_TOKEN or not TELEGRAM_CHAT_ID:
         print("Faltan TELEGRAM_BOT_TOKEN o TELEGRAM_CHAT_ID; no se pudo avisar.")
@@ -115,7 +169,7 @@ def main() -> None:
             continue
 
         any_success = True
-        previous_price = state.get(url, {}).get("price")
+        previous_price = record_price(state, url, name, current_price)
 
         if previous_price is None:
             print(f"Primera corrida de '{name}': referencia {format_ars(current_price)}")
@@ -127,11 +181,6 @@ def main() -> None:
             print(f"Baja detectada en '{name}': {previous_price} -> {current_price}")
         else:
             print(f"Sin baja en '{name}'. Precio actual: {format_ars(current_price)}")
-
-        state[url] = {
-            "price": current_price,
-            "last_checked": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        }
 
     save_state(state)
 
