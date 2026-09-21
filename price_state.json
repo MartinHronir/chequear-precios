@@ -1,14 +1,32 @@
 {
   "https://tiendadelinternas.ar/productos/acebeam-pokelit-aa/": {
-    "price": 84000.0,
-    "last_checked": "2026-09-21T17:45:15+00:00"
+    "name": "Acebeam Pokelit AA",
+    "history": [
+      {
+        "date": "2026-09-21",
+        "price": 84000.0
+      }
+    ],
+    "last_checked": "2026-09-21T19:48:10+00:00"
   },
   "https://tiendadelinternas.ar/productos/wuben-e7/": {
-    "price": 89000.0,
-    "last_checked": "2026-09-21T17:45:20+00:00"
+    "name": "Wuben E7",
+    "history": [
+      {
+        "date": "2026-09-21",
+        "price": 89000.0
+      }
+    ],
+    "last_checked": "2026-09-21T19:48:15+00:00"
   },
   "https://tiendadelinternas.ar/productos/wuben-g5/": {
-    "price": 69000.0,
-    "last_checked": "2026-09-21T17:45:24+00:00"
+    "name": "Wuben G5",
+    "history": [
+      {
+        "date": "2026-09-21",
+        "price": 69000.0
+      }
+    ],
+    "last_checked": "2026-09-21T19:48:19+00:00"
   }
 }
