@@ -2,7 +2,7 @@ name: Chequear precio
 
 on:
   schedule:
-    - cron: "0 12 * * *"  # una vez al día, 12:00 UTC = 09:00hs Argentina
+    - cron: "11 12,16 * * *"  # una cos veces al día, 12:11 UTC = 09:11hs y 16:11 UTC = 13:11hs Argentina
   workflow_dispatch:  # permite ejecutarlo manualmente desde la pestaña Actions
 
 permissions:
