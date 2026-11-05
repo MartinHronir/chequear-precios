@@ -181,9 +181,13 @@
       {
         "date": "2026-11-04",
         "price": 84000.0
+      },
+      {
+        "date": "2026-11-05",
+        "price": 84000.0
       }
     ],
-    "last_checked": "2026-11-04T19:41:49+00:00"
+    "last_checked": "2026-11-05T19:52:30+00:00"
   },
   "https://tiendadelinternas.ar/productos/wuben-e7/": {
     "name": "Wuben E7",
@@ -367,9 +371,13 @@
       {
         "date": "2026-11-04",
         "price": 89000.0
+      },
+      {
+        "date": "2026-11-05",
+        "price": 89000.0
       }
     ],
-    "last_checked": "2026-11-04T19:41:54+00:00"
+    "last_checked": "2026-11-05T19:52:35+00:00"
   },
   "https://tiendadelinternas.ar/productos/wuben-g5/": {
     "name": "Wuben G5",
@@ -553,8 +561,12 @@
       {
         "date": "2026-11-04",
         "price": 69000.0
+      },
+      {
+        "date": "2026-11-05",
+        "price": 69000.0
       }
     ],
-    "last_checked": "2026-11-04T19:41:57+00:00"
+    "last_checked": "2026-11-05T19:52:40+00:00"
   }
 }
