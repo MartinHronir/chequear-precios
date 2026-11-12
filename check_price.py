@@ -174,10 +174,19 @@ def main() -> None:
         if previous_price is None:
             print(f"Primera corrida de '{name}': referencia {format_ars(current_price)}")
         elif current_price < previous_price:
-            notify_telegram(
-                f"¡{name} bajó de precio! {format_ars(previous_price)} → "
-                f"{format_ars(current_price)}\n{url}"
-            )
+            try:
+                notify_telegram(
+                    f"¡{name} bajó de precio! {format_ars(previous_price)} → "
+                    f"{format_ars(current_price)}\n{url}"
+                )
+            except requests.RequestException as exc:
+                # Si Telegram falla (token inválido, bot bloqueado, etc.) no
+                # queremos perder el chequeo de hoy ni el de los productos
+                # que todavía faltan: se deja constancia y se sigue.
+                print(
+                    f"No se pudo avisar por Telegram la baja de '{name}': {exc}",
+                    file=sys.stderr,
+                )
             print(f"Baja detectada en '{name}': {previous_price} -> {current_price}")
         else:
             print(f"Sin baja en '{name}'. Precio actual: {format_ars(current_price)}")
