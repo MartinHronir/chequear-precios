@@ -1,6 +1,6 @@
 """
 Chequea el precio de varios productos en tiendadelinternas.ar (Tiendanube)
-y avisa por Telegram si alguno bajó respecto del último precio registrado.
+y avisa por ntfy.io si alguno bajó respecto del último precio registrado.
 
 Además del precio actual, guarda un historial con fecha por producto en
 price_state.json (para poder calcular variaciones y alimentar el
@@ -42,11 +42,19 @@ DELAY_RANGE_SECONDS = (2, 5)
 # Cuántos días de historial conservar por producto, para que el JSON no
 # crezca sin límite.
 MAX_HISTORY_DAYS = 90
+
+# Reintentos para el aviso: por si ntfy.io tiene algún hipo momentáneo.
+NTFY_RETRY_ATTEMPTS = 2
+NTFY_RETRY_DELAY_RANGE_SECONDS = (3, 8)
 # ─────────────────────────────────────────────────────────────────────────
 
 STATE_FILE = Path(__file__).parent / "price_state.json"
-TELEGRAM_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
-TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
+
+# "Tema" propio de ntfy.io (ver NTFY_TOPIC en los Secrets del repo). Es
+# básicamente una contraseña: cualquiera que lo conozca puede mandar o leer
+# avisos en ese tema, así que conviene que sea largo y no adivinable, no un
+# nombre corto y obvio.
+NTFY_TOPIC = os.environ.get("NTFY_TOPIC")
 
 HEADERS = {
     "User-Agent": (
@@ -137,15 +145,29 @@ def record_price(state: dict, url: str, name: str, price: float, today: date = N
     return previous_price
 
 
-def notify_telegram(message: str) -> None:
-    if not TELEGRAM_TOKEN or not TELEGRAM_CHAT_ID:
-        print("Faltan TELEGRAM_BOT_TOKEN o TELEGRAM_CHAT_ID; no se pudo avisar.")
+def notify_ntfy(message: str) -> None:
+    if not NTFY_TOPIC:
+        print("Falta NTFY_TOPIC; no se pudo avisar.")
         return
-    api_url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
-    resp = requests.post(
-        api_url, data={"chat_id": TELEGRAM_CHAT_ID, "text": message}, timeout=20
-    )
-    resp.raise_for_status()
+    url = f"https://ntfy.sh/{NTFY_TOPIC}"
+    # El título va en un header ASCII fijo: los headers HTTP no admiten
+    # tildes/ñ de forma confiable, así que todo lo variable (nombre del
+    # producto, precios, link) va en el cuerpo, que sí es UTF-8 libre.
+    headers = {"Title": "Baja de precio", "Priority": "default"}
+    for attempt in range(1, NTFY_RETRY_ATTEMPTS + 1):
+        try:
+            resp = requests.post(
+                url, data=message.encode("utf-8"), headers=headers, timeout=20
+            )
+            resp.raise_for_status()
+            return
+        except requests.RequestException:
+            if attempt == NTFY_RETRY_ATTEMPTS:
+                # Se agotaron los intentos: se deja que falle y que quien
+                # llama decida qué hacer (ver main(), que no corta el
+                # chequeo del resto de los productos por esto).
+                raise
+            time.sleep(random.uniform(*NTFY_RETRY_DELAY_RANGE_SECONDS))
 
 
 def main() -> None:
@@ -175,16 +197,16 @@ def main() -> None:
             print(f"Primera corrida de '{name}': referencia {format_ars(current_price)}")
         elif current_price < previous_price:
             try:
-                notify_telegram(
+                notify_ntfy(
                     f"¡{name} bajó de precio! {format_ars(previous_price)} → "
                     f"{format_ars(current_price)}\n{url}"
                 )
             except requests.RequestException as exc:
-                # Si Telegram falla (token inválido, bot bloqueado, etc.) no
-                # queremos perder el chequeo de hoy ni el de los productos
-                # que todavía faltan: se deja constancia y se sigue.
+                # Si ntfy falla no queremos perder el chequeo de hoy ni el
+                # de los productos que todavía faltan: se deja constancia
+                # y se sigue.
                 print(
-                    f"No se pudo avisar por Telegram la baja de '{name}': {exc}",
+                    f"No se pudo avisar por ntfy la baja de '{name}': {exc}",
                     file=sys.stderr,
                 )
             print(f"Baja detectada en '{name}': {previous_price} -> {current_price}")
