@@ -30,6 +30,7 @@ PRODUCT_URLS = [
     "https://tiendadelinternas.ar/productos/acebeam-pokelit-aa/",
     "https://tiendadelinternas.ar/productos/wuben-e7/",
     "https://tiendadelinternas.ar/productos/wuben-g5/",
+    "https://tiendadelinternas.ar/productos/rocktol-gen-r-lite/"
 ]
 
 PRICE_META_PROPERTY = "tiendanube:price"
