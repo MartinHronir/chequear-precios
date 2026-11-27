@@ -269,9 +269,13 @@
       {
         "date": "2026-11-26",
         "price": 84000.0
+      },
+      {
+        "date": "2026-11-27",
+        "price": 84000.0
       }
     ],
-    "last_checked": "2026-11-26T21:25:29+00:00"
+    "last_checked": "2026-11-27T21:07:32+00:00"
   },
   "https://tiendadelinternas.ar/productos/wuben-e7/": {
     "name": "Wuben E7",
@@ -543,9 +547,13 @@
       {
         "date": "2026-11-26",
         "price": 69000.0
+      },
+      {
+        "date": "2026-11-27",
+        "price": 69000.0
       }
     ],
-    "last_checked": "2026-11-26T21:25:32+00:00"
+    "last_checked": "2026-11-27T21:07:35+00:00"
   },
   "https://tiendadelinternas.ar/productos/wuben-g5/": {
     "name": "Wuben G5",
@@ -817,9 +825,13 @@
       {
         "date": "2026-11-26",
         "price": 69000.0
+      },
+      {
+        "date": "2026-11-27",
+        "price": 69000.0
       }
     ],
-    "last_checked": "2026-11-26T21:25:36+00:00"
+    "last_checked": "2026-11-27T21:07:38+00:00"
   },
   "https://tiendadelinternas.ar/productos/rocktol-gen-r-lite/": {
     "name": "Rocktol GEN R Lite",
@@ -863,8 +875,12 @@
       {
         "date": "2026-11-26",
         "price": 88000.0
+      },
+      {
+        "date": "2026-11-27",
+        "price": 88000.0
       }
     ],
-    "last_checked": "2026-11-26T21:25:39+00:00"
+    "last_checked": "2026-11-27T21:07:43+00:00"
   }
 }
